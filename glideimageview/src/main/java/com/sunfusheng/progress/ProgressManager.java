@@ -26,9 +26,15 @@ public class ProgressManager {
             okHttpClient = new OkHttpClient.Builder()
                     .addNetworkInterceptor(chain -> {
                         Request request = chain.request();
-                        Response response = chain.proceed(request);
+                        Request.Builder builder = request.newBuilder();
+                        String url = request.url().toString();
+                        // fix: ui.cn CDN链接白名单问题处理
+                        if (url.contains("img.ui.cn")) {
+                            builder.addHeader("Referer", "https://www.ui.cn/");
+                        }
+                        Response response = chain.proceed(builder.build());
                         return response.newBuilder()
-                                .body(new ProgressResponseBody(request.url().toString(), LISTENER, response.body()))
+                                .body(new ProgressResponseBody(url, LISTENER, response.body()))
                                 .build();
                     })
                     .build();
